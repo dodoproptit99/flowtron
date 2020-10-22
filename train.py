@@ -277,7 +277,7 @@ if __name__ == "__main__":
     global config
     config = json.loads(data)
     update_params(config, args.params)
-    print(config)
+
 
     train_config = config["train_config"]
     global data_config
@@ -297,4 +297,4 @@ if __name__ == "__main__":
 
     torch.backends.cudnn.enabled = True
     torch.backends.cudnn.benchmark = False
-    train(n_gpus, rank, **train_config)
+    # train(n_gpus, rank, **train_config)

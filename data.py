@@ -26,7 +26,7 @@ import torch.utils.data
 from scipy.io.wavfile import read
 from audio_processing import TacotronSTFT
 from text import text_to_sequence, cmudict, _clean_text, get_arpabet
-
+from test import TextEmbedding
 
 def load_filepaths_and_text(filename, split="|"):
     with open(filename, encoding='utf-8') as f:
@@ -88,7 +88,20 @@ class Data(torch.utils.data.Dataset):
         text = ' '.join([get_arpabet(word, self.cmudict)
                          if random.random() < self.p_arpabet else word
                          for word in words])
-        text_norm = torch.LongTensor(text_to_sequence(text))
+
+        # from hparams import create_hparams_and_paths
+        # hparams, path = create_hparams_and_paths()
+        with open('config.json') as f:
+            data = f.read()
+        embeeding_config = json.loads(data)["embeeding_config"]
+        text_embedding = TextEmbedding(embeeding_config)
+        text_norm = text_embedding.text_norm(text)
+        from ZaG2P.api import load_model
+        g2p_model, viet_dict = load_model()
+        text_out = text_embedding.g2s(text_norm)
+        sequence = text_embedding.text2seq(text_out)
+
+        text_norm = torch.LongTensor(sequence)
         return text_norm
 
     def __getitem__(self, index):
@@ -167,8 +180,13 @@ if __name__ == "__main__":
 
     with open(args.config) as f:
         data = f.read()
+
+    ignore_keys = ['training_files', 'validation_files']
     data_config = json.loads(data)["data_config"]
-    mel2samp = Data(**data_config)
+
+    mel2samp = Data(data_config['training_files'],
+                    **dict((k, v) for k, v in data_config.items()
+                    if k not in ignore_keys))
 
     # Make directory if it doesn't exist
     if not os.path.isdir(args.output_dir):

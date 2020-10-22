@@ -201,12 +201,14 @@ def train(n_gpus, rank, output_directory, epochs, learning_rate, weight_decay,
         data_config, n_gpus, batch_size)
 
     # Get shared output_directory ready
-    if rank == 0 and not os.path.isdir(output_directory):
+    #if rank == 0 and not os.path.isdir(output_directory):
+    if not os.path.isdir(output_directory):
         os.makedirs(output_directory)
         os.chmod(output_directory, 0o775)
     print("output directory", output_directory)
 
-    if with_tensorboard and rank == 0:
+    #if with_tensorboard and rank == 0:
+    if with_tensorboard:
         logger = FlowtronLogger(os.path.join(output_directory, 'logs'))
 
     model.train()
@@ -238,17 +240,19 @@ def train(n_gpus, rank, output_directory, epochs, learning_rate, weight_decay,
                 loss.backward()
             optimizer.step()
 
-            if rank == 0:
-                print("{}:\t{:.9f}".format(iteration, reduced_loss), flush=True)
+            #if rank == 0:
+            print("{}:\t{:.9f}".format(iteration, reduced_loss), flush=True)
 
-            if with_tensorboard and rank == 0:
+            if with_tensorboard:
+            #if with_tensorboard and rank == 0:
                 logger.add_scalar('training_loss', reduced_loss, iteration)
                 logger.add_scalar('learning_rate', learning_rate, iteration)
 
             if (iteration % iters_per_checkpoint == 0):
                 val_loss, attns, gate_pred, gate_target = compute_validation_loss(
                     model, criterion, valset, collate_fn, batch_size, n_gpus)
-                if rank == 0:
+                if True:
+                #if rank == 0:
                     print("Validation loss {}: {:9f}  ".format(iteration, val_loss))
                     if with_tensorboard:
                         logger.log_validation(

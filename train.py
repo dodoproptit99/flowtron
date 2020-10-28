@@ -267,13 +267,14 @@ def train(n_gpus, rank, output_directory, epochs, learning_rate, weight_decay,
 
 
 if __name__ == "__main__":
+    import os 
     parser = argparse.ArgumentParser()
     parser.add_argument('-c', '--config', type=str,
                         help='JSON file for configuration')
     parser.add_argument('-p', '--params', nargs='+', default=[])
     args = parser.parse_args()
     args.rank = 0
-
+    os.environ['CUDA_VISIBLE_DEVICES'] = "0"
     # Parse configs.  Globals nicer in this case
     with open(args.config) as f:
         data = f.read()
